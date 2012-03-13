@@ -1,0 +1,3 @@
+This is a simple sandbox for playing around with netty. Specifically to create an RPC type of example in a similar vein to twitters Finagle. 
+
+This is mainly for my own learning as I have been using Netty recently on a client project and want to learn a little bit more about developing on top of it and ways to test this kind of thing.
