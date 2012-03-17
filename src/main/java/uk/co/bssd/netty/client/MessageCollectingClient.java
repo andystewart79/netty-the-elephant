@@ -9,22 +9,30 @@ import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.serialization.ClassResolvers;
 import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
 import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 
+import uk.co.bssd.netty.DisconnectListener;
+
 public class MessageCollectingClient {
 
 	private final ClientBootstrap bootstrap;
 	private final ClientMessageCollector messageCollector;
+	private final DisconnectListener disconnectListener;
 
 	private Channel channel;
 
-	public MessageCollectingClient() {
+	public MessageCollectingClient(DisconnectListener disconnectListener) {
+		this.disconnectListener = disconnectListener;
+
 		ChannelFactory channelFactory = new NioClientSocketChannelFactory(
 				Executors.newCachedThreadPool(),
 				Executors.newCachedThreadPool());
@@ -41,7 +49,17 @@ public class MessageCollectingClient {
 						ClassResolvers.cacheDisabled(null)));
 				pipeline.addLast("objectEncoder", new ObjectEncoder());
 
-				pipeline.addLast("messageCollector", MessageCollectingClient.this.messageCollector);
+				pipeline.addLast("messageCollector",
+						MessageCollectingClient.this.messageCollector);
+				pipeline.addLast("channelDisconnectHandler",
+						new SimpleChannelUpstreamHandler() {
+							@Override
+							public void channelDisconnected(
+									ChannelHandlerContext ctx,
+									ChannelStateEvent e) throws Exception {
+								MessageCollectingClient.this.disconnectListener.onDisconnect();
+							}
+						});
 
 				return pipeline;
 			}
@@ -60,7 +78,7 @@ public class MessageCollectingClient {
 	public void send(Serializable message) {
 		this.channel.write(message);
 	}
-	
+
 	public Object awaitMessage(long timeoutMillis) {
 		return this.messageCollector.awaitMessage(timeoutMillis);
 	}

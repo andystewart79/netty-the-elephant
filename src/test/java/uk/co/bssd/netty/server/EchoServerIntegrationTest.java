@@ -19,6 +19,7 @@ public class EchoServerIntegrationTest {
 	private static final long CLIENT_CONNECTION_TIMEOUT_MS = 1000;
 	private static final long RECEIVE_MESSAGE_TIMEOUT_MS = 1000;
 
+	private DisconnectLatch clientDisconnectLatch;
 	private MessageCollectingClient client;
 	private EchoServer server;
 
@@ -27,7 +28,8 @@ public class EchoServerIntegrationTest {
 		this.server = new EchoServer();
 		this.server.start(HOST, PORT);
 
-		this.client = new MessageCollectingClient();
+		this.clientDisconnectLatch = new DisconnectLatch();
+		this.client = new MessageCollectingClient(this.clientDisconnectLatch);
 		this.client.start(HOST, PORT, CLIENT_CONNECTION_TIMEOUT_MS);
 	}
 
@@ -48,5 +50,11 @@ public class EchoServerIntegrationTest {
 
 		SimpleResponse response = (SimpleResponse) message;
 		assertThat(response.payload(), is(payload));
+	}
+	
+	@Test
+	public void testStoppingServerCausesDisconnectAtClient() {
+		this.server.stop();
+		assertThat(this.clientDisconnectLatch.awaitDisconnect(), is(true));
 	}
 }
