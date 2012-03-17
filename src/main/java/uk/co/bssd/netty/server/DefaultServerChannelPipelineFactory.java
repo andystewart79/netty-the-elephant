@@ -10,11 +10,11 @@ import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 
 import uk.co.bssd.netty.ChannelEventHandler;
 
-public class ServerChannelPipelineFactory implements ChannelPipelineFactory {
+public class DefaultServerChannelPipelineFactory implements ChannelPipelineFactory {
 
 	private final ChannelGroup channelGroup;
 	
-	public ServerChannelPipelineFactory(ChannelGroup channelGroup) {
+	public DefaultServerChannelPipelineFactory(ChannelGroup channelGroup) {
 		this.channelGroup = channelGroup;
 	}
 	
@@ -26,7 +26,6 @@ public class ServerChannelPipelineFactory implements ChannelPipelineFactory {
 		pipeline.addLast("objectEncoder", new ObjectEncoder());
 		pipeline.addLast("channelEventHandler", new ChannelEventHandler(
 				this.channelGroup));
-		pipeline.addLast("messageHandler", new EchoChannelHandler());
 		return pipeline;
 	}
 }

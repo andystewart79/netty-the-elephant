@@ -31,15 +31,20 @@
 
 	<dependencies>
 		<dependency>
-    			<groupId>io.netty</groupId>
-    			<artifactId>netty</artifactId>
-	    		<version>3.3.1.Final</version>
+			<groupId>io.netty</groupId>
+			<artifactId>netty</artifactId>
+			<version>3.3.1.Final</version>
 		</dependency>
 		<!-- Test Dependencies -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.9</version>
+		</dependency>
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+			<version>3.1</version>
 		</dependency>
 	</dependencies>
 
