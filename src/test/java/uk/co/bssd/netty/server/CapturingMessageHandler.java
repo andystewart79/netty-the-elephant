@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CapturingMessageHandler<T> implements MessageHandler<T>{
+public class CapturingMessageHandler<T> implements MessageHandler<Void, T>{
 
 	private static final long DEFAULT_TIMEOUT_MS = 1000;
 	
@@ -23,9 +23,10 @@ public class CapturingMessageHandler<T> implements MessageHandler<T>{
 	}
 	
 	@Override
-	public void onMessage(T message) {
+	public Void onMessage(T message) {
 		this.captured.set(message);
 		this.latch.countDown();
+		return null;
 	}
 	
 	public boolean hasCaptured() {

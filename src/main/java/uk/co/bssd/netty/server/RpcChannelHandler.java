@@ -17,7 +17,11 @@ public class RpcChannelHandler extends SimpleChannelUpstreamHandler {
 	public void messageReceived(ChannelHandlerContext ctx, MessageEvent e)
 			throws Exception {
 		Object message = e.getMessage();
-		MessageHandler<Object> handler = (MessageHandler<Object>)this.messageHandlers.forType(message.getClass());
-		handler.onMessage(message);
+		MessageHandler<Object, Object> handler = (MessageHandler<Object, Object>)this.messageHandlers.forType(message.getClass());
+		Object response = handler.onMessage(message);
+		
+		if (response != null) {
+			e.getChannel().write(response);
+		}
 	}
 }

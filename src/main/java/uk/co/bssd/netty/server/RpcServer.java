@@ -16,7 +16,7 @@ public class RpcServer extends BaseServer {
 		this.messageHandlers = messageHandlers;
 	}
 	
-	public void addMessageHandler(Class<?> messageType, MessageHandler<?> handler) {
+	public void addMessageHandler(Class<?> messageType, MessageHandler<?, ?> handler) {
 		this.messageHandlers.add(messageType, handler);
 	}
 }

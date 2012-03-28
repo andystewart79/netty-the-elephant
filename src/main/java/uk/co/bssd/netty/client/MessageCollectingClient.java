@@ -33,7 +33,7 @@ public class MessageCollectingClient {
 	public MessageCollectingClient(DisconnectListener disconnectListener) {
 		this.disconnectListener = disconnectListener;
 
-		ChannelFactory channelFactory = new NioClientSocketChannelFactory(
+		final ChannelFactory channelFactory = new NioClientSocketChannelFactory(
 				Executors.newCachedThreadPool(),
 				Executors.newCachedThreadPool());
 
@@ -75,8 +75,15 @@ public class MessageCollectingClient {
 		this.channel = future.getChannel();
 	}
 
-	public void send(Serializable message) {
+	public void sendAsync(Serializable message) {
 		this.channel.write(message);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T sendSync(Serializable message,
+			Class<T> responseClass, long timeoutMillis) {
+		sendAsync(message);
+		return (T)awaitMessage(timeoutMillis);
 	}
 
 	public Object awaitMessage(long timeoutMillis) {

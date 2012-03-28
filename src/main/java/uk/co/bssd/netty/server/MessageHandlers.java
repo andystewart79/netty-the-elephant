@@ -5,17 +5,17 @@ import java.util.Map;
 
 public class MessageHandlers {
 
-	private final Map<Class<?>, MessageHandler<?>> handlers;
+	private final Map<Class<?>, MessageHandler<?, ?>> handlers;
 
 	public MessageHandlers() {
-		this.handlers = new HashMap<Class<?>, MessageHandler<?>>();
+		this.handlers = new HashMap<Class<?>, MessageHandler<?, ?>>();
 	}
 
-	public void add(Class<?> messageType, MessageHandler<?> handler) {
+	public void add(Class<?> messageType, MessageHandler<?, ?> handler) {
 		this.handlers.put(messageType, handler);
 	}
 
-	public MessageHandler<?> forType(Class<?> clazz) {
+	public MessageHandler<?, ?> forType(Class<?> clazz) {
 		return this.handlers.get(clazz);
 	}
 }

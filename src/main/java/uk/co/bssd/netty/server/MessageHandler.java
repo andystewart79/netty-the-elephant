@@ -1,6 +1,6 @@
 package uk.co.bssd.netty.server;
 
-public interface MessageHandler<T> {
+public interface MessageHandler<S, T> {
 
-	void onMessage(T message);
+	S onMessage(T message);
 }

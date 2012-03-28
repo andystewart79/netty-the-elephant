@@ -14,7 +14,7 @@ import uk.co.bssd.netty.dto.SimpleResponse;
 public class EchoServerIntegrationTest {
 
 	private static final String HOST = "127.0.0.1";
-	private static final int PORT = 6781;
+	private static final int PORT = 6788;
 
 	private static final long CLIENT_CONNECTION_TIMEOUT_MS = 1000;
 	private static final long RECEIVE_MESSAGE_TIMEOUT_MS = 1000;
@@ -38,12 +38,12 @@ public class EchoServerIntegrationTest {
 		this.client.stop();
 		this.server.stop();
 	}
-
+	
 	@Test
 	public void testServerEchoesBackMessageSentFromClient() {
 		String payload = "Hello";
 
-		this.client.send(new SimpleRequest(payload));
+		this.client.sendAsync(new SimpleRequest(payload));
 
 		Object message = this.client.awaitMessage(RECEIVE_MESSAGE_TIMEOUT_MS);
 		assertThat(message, is(SimpleResponse.class));

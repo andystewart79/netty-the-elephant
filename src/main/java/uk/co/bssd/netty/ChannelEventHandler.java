@@ -1,5 +1,6 @@
 package uk.co.bssd.netty;
 
+import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
@@ -16,6 +17,7 @@ public class ChannelEventHandler extends SimpleChannelUpstreamHandler {
 	@Override
 	public void channelConnected(ChannelHandlerContext ctx, ChannelStateEvent e)
 			throws Exception {
-		this.channelGroup.add(e.getChannel());
+		Channel channel = ctx.getChannel();
+		this.channelGroup.add(channel);
 	}
 }
