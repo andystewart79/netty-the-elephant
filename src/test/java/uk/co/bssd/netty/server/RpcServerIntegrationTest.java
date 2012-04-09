@@ -2,14 +2,17 @@ package uk.co.bssd.netty.server;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
 import java.io.Serializable;
 
+import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.co.bssd.netty.client.MessageTimeoutException;
 import uk.co.bssd.netty.client.RpcClient;
 import uk.co.bssd.netty.dto.SimpleRequest;
 import uk.co.bssd.netty.dto.SimpleResponse;
@@ -20,7 +23,8 @@ public class RpcServerIntegrationTest {
 	private static final int PORT = 6789;
 
 	private static final long CLIENT_CONNECTION_TIMEOUT_MS = 1000;
-	private static final long CLIENT_MESSAGE_RECEIVE_TIMEOUT_MS = 1000;
+	private static final long CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS = 1000;
+	private static final long CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS = 2;
 
 	private static final String PAYLOAD = "hello";
 
@@ -78,7 +82,7 @@ public class RpcServerIntegrationTest {
 				new EchoSimpleRequestHandler());
 
 		SimpleResponse response = this.client.sendSync(this.request,
-				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_TIMEOUT_MS);
+				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 		assertThat(response.payload(), is(PAYLOAD));
 	}
 
@@ -90,7 +94,7 @@ public class RpcServerIntegrationTest {
 		this.server.broadcast(new SimpleResponse(
 				"Not the answer you are looking for"));
 		SimpleResponse response = this.client.sendSync(this.request,
-				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_TIMEOUT_MS);
+				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 		assertThat(response.payload(), is(PAYLOAD));
 	}
 
@@ -100,7 +104,7 @@ public class RpcServerIntegrationTest {
 				new IllegalThreadStateExceptionThrowingHandler());
 
 		this.client.sendSync(this.request, SimpleResponse.class,
-				CLIENT_MESSAGE_RECEIVE_TIMEOUT_MS);
+				CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 	}
 
 	@Test
@@ -127,6 +131,11 @@ public class RpcServerIntegrationTest {
 		this.client.stop();
 		this.client.stop();
 	}
+	
+	@Test
+	public void testClientAwaitingMessageReceivesNullIfTimeoutExpiresBeforeAMessageIsSent() {
+		assertThat(this.client.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS), is(nullValue()));
+	}
 
 	private void startClient() {
 		this.client.start(HOST, PORT, CLIENT_CONNECTION_TIMEOUT_MS);
@@ -134,7 +143,7 @@ public class RpcServerIntegrationTest {
 
 	private Serializable clientAwaitMessage() {
 		Serializable received = this.client
-				.awaitMessage(CLIENT_MESSAGE_RECEIVE_TIMEOUT_MS);
+				.awaitMessage(CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 		return received;
 	}
 }
