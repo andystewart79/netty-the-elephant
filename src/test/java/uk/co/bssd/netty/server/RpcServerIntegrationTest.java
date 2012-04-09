@@ -7,11 +7,11 @@ import static org.junit.Assert.assertThat;
 
 import java.io.Serializable;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.co.bssd.netty.UnknownSynchronousRequestException;
 import uk.co.bssd.netty.client.MessageTimeoutException;
 import uk.co.bssd.netty.client.RpcClient;
 import uk.co.bssd.netty.dto.SimpleRequest;
@@ -26,7 +26,7 @@ public class RpcServerIntegrationTest {
 	private static final long CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS = 1000;
 	private static final long CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS = 2;
 
-	private static final String PAYLOAD = "hello";
+	private static final String HELLO = "hello";
 
 	private SimpleRequest request;
 
@@ -36,7 +36,7 @@ public class RpcServerIntegrationTest {
 
 	@Before
 	public void before() throws Exception {
-		this.request = new SimpleRequest(PAYLOAD);
+		this.request = new SimpleRequest(HELLO);
 
 		this.server = new RpcServer();
 		this.server.start(HOST, PORT);
@@ -55,7 +55,7 @@ public class RpcServerIntegrationTest {
 
 	@Test
 	public void testBroadcastingMessageFromServerIsReceivedByClient() {
-		String hello = "Hello";
+		String hello = HELLO;
 		this.server.broadcast(hello);
 
 		Serializable received = clientAwaitMessage();
@@ -73,7 +73,7 @@ public class RpcServerIntegrationTest {
 		messageHandler.awaitCapture();
 
 		assertThat(messageHandler.hasCaptured(), is(true));
-		assertThat(messageHandler.capturedValue().payload(), is(PAYLOAD));
+		assertThat(messageHandler.capturedValue().payload(), is(HELLO));
 	}
 
 	@Test
@@ -84,7 +84,7 @@ public class RpcServerIntegrationTest {
 		SimpleResponse response = this.client
 				.sendSync(this.request, SimpleResponse.class,
 						CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
-		assertThat(response.payload(), is(PAYLOAD));
+		assertThat(response.payload(), is(HELLO));
 	}
 
 	@Test
@@ -97,7 +97,7 @@ public class RpcServerIntegrationTest {
 		SimpleResponse response = this.client
 				.sendSync(this.request, SimpleResponse.class,
 						CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
-		assertThat(response.payload(), is(PAYLOAD));
+		assertThat(response.payload(), is(HELLO));
 	}
 
 	@Test(expected = IllegalThreadStateException.class)
@@ -119,7 +119,7 @@ public class RpcServerIntegrationTest {
 	public void testClientCanBeStoppedAndRestarted() {
 		this.client.stop();
 		startClient();
-		this.server.broadcast("Hello");
+		this.server.broadcast(HELLO);
 		assertThat(clientAwaitMessage(), is(notNullValue()));
 	}
 
@@ -156,8 +156,14 @@ public class RpcServerIntegrationTest {
 					}
 				});
 
-		this.client.sendSync("Hello", Serializable.class,
+		this.client.sendSync(HELLO, Serializable.class,
 				CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS);
+	}
+
+	@Test(expected = UnknownSynchronousRequestException.class)
+	public void testSendingAnUnknownSynchronousRequestTypeOnTheServerThrowsAnExceptionInTheClient() {
+		this.client.sendSync(HELLO, String.class,
+				CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 	}
 
 	private void startClient() {
