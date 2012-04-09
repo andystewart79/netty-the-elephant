@@ -65,7 +65,7 @@ public class RpcServerIntegrationTest {
 	@Test
 	public void testSendingMessageAsyncToTheServerInvokesHandlerAssociatedWithTheMessageType() {
 		CapturingMessageHandler<SimpleRequest> messageHandler = new CapturingMessageHandler<SimpleRequest>();
-		this.server.registerASynchronousMessageHandler(SimpleRequest.class,
+		this.server.registerAsynchronousMessageHandler(SimpleRequest.class,
 				messageHandler);
 
 		this.client.sendAsync(this.request);
@@ -81,8 +81,9 @@ public class RpcServerIntegrationTest {
 		this.server.registerSynchronousMessageHandler(SimpleRequest.class,
 				new EchoSimpleRequestHandler());
 
-		SimpleResponse response = this.client.sendSync(this.request,
-				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
+		SimpleResponse response = this.client
+				.sendSync(this.request, SimpleResponse.class,
+						CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 		assertThat(response.payload(), is(PAYLOAD));
 	}
 
@@ -93,8 +94,9 @@ public class RpcServerIntegrationTest {
 
 		this.server.broadcast(new SimpleResponse(
 				"Not the answer you are looking for"));
-		SimpleResponse response = this.client.sendSync(this.request,
-				SimpleResponse.class, CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
+		SimpleResponse response = this.client
+				.sendSync(this.request, SimpleResponse.class,
+						CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
 		assertThat(response.payload(), is(PAYLOAD));
 	}
 
@@ -120,21 +122,42 @@ public class RpcServerIntegrationTest {
 		this.server.broadcast("Hello");
 		assertThat(clientAwaitMessage(), is(notNullValue()));
 	}
-	
-	@Test(expected=IllegalStateException.class)
+
+	@Test(expected = IllegalStateException.class)
 	public void testStartingAnAlreadyRunningClientThrowsAnException() {
 		startClient();
 	}
-	
+
 	@Test
 	public void testStoppingAnAlreadyStoppedClientHasNoEffect() {
 		this.client.stop();
 		this.client.stop();
 	}
-	
+
 	@Test
 	public void testClientAwaitingMessageReceivesNullIfTimeoutExpiresBeforeAMessageIsSent() {
-		assertThat(this.client.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS), is(nullValue()));
+		assertThat(
+				this.client
+						.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS),
+				is(nullValue()));
+	}
+
+	@Test(expected = MessageTimeoutException.class)
+	public void testLongRunningProcessOnServerThrowsTimeoutExceptionOnClient() {
+		this.server.registerSynchronousMessageHandler(String.class,
+				new SynchronousMessageHandler<Serializable, Serializable>() {
+					@Override
+					public Serializable onMessage(Serializable message) {
+						try {
+							Thread.sleep(CLIENT_MESSAGE_RECEIVE_DEFAULT_TIMEOUT_MS);
+						} catch (InterruptedException e) {
+						}
+						return null;
+					}
+				});
+
+		this.client.sendSync("Hello", Serializable.class,
+				CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS);
 	}
 
 	private void startClient() {

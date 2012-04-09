@@ -36,7 +36,7 @@ public class RpcChannelHandler extends SimpleChannelUpstreamHandler {
 		}
 	}
 
-	public void registerASynchronousMessageHandler(
+	public void registerAsynchronousMessageHandler(
 			Class<? extends Serializable> clazz,
 			AsynchronousMessageHandler<? extends Serializable> handler) {
 		this.asynchronousMessageDispatcher.registerHandler(clazz, handler);

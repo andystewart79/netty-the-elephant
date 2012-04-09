@@ -15,8 +15,8 @@ public class RpcServer extends BaseServer {
 		super(channelGroup, new RpcServerChannelPipelineFactory(channelGroup));
 	}
 	
-	public void registerASynchronousMessageHandler(Class<? extends Serializable> messageType, AsynchronousMessageHandler<? extends Serializable> handler) {
-		pipelineFactory().registerASynchronousMessageHandler(messageType, handler);
+	public void registerAsynchronousMessageHandler(Class<? extends Serializable> messageType, AsynchronousMessageHandler<? extends Serializable> handler) {
+		pipelineFactory().registerAsynchronousMessageHandler(messageType, handler);
 	}
 	
 	public void registerSynchronousMessageHandler(Class<? extends Serializable> messageType, SynchronousMessageHandler<? extends Serializable, ? extends Serializable> handler) {

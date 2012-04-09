@@ -21,8 +21,8 @@ public class RpcServerChannelPipelineFactory extends DefaultServerChannelPipelin
 		return pipeline;
 	}
 	
-	public void registerASynchronousMessageHandler(Class<? extends Serializable> clazz, AsynchronousMessageHandler<? extends Serializable> handler) {
-		this.rpcChannelHandler.registerASynchronousMessageHandler(clazz, handler);
+	public void registerAsynchronousMessageHandler(Class<? extends Serializable> clazz, AsynchronousMessageHandler<? extends Serializable> handler) {
+		this.rpcChannelHandler.registerAsynchronousMessageHandler(clazz, handler);
 	}
 	
 	public void registerSynchronousMessageHandler(Class<? extends Serializable> clazz, SynchronousMessageHandler<? extends Serializable, ? extends Serializable> handler) {
