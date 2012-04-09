@@ -15,7 +15,10 @@ public class SynchronousMessageCollector {
 	}
 	
 	public void onMessage(SynchronousResponse response) {
-		this.responses.put(response.correlationId(), response);
+		synchronized (this.responses) {
+			this.responses.put(response.correlationId(), response);
+			this.responses.notify();
+		}
 	}
 	
 	public SynchronousResponse awaitResponse(UUID correlationId, long timeout) {
@@ -23,8 +26,19 @@ public class SynchronousMessageCollector {
 		long expiryTime = System.currentTimeMillis() + timeout;
 		
 		while (System.currentTimeMillis() < expiryTime) {
-			if (this.responses.containsKey(correlationId)) {
-				return this.responses.remove(correlationId);
+			synchronized (this.responses) {
+				if (!this.responses.containsKey(correlationId)){
+					long waitMs = expiryTime - System.currentTimeMillis();
+					try {
+						this.responses.wait(waitMs);
+					} catch (InterruptedException e) {
+						return null;
+					}
+				}
+				
+				if (this.responses.containsKey(correlationId)) {
+					return this.responses.remove(correlationId);
+				} 
 			}
 		}
 		
