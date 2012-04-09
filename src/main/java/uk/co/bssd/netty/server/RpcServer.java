@@ -1,22 +1,30 @@
 package uk.co.bssd.netty.server;
 
+import java.io.Serializable;
+
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 
 public class RpcServer extends BaseServer {
 
-	private final MessageHandlers messageHandlers;
-	
 	public RpcServer() {
-		this(new DefaultChannelGroup(RpcServer.class.getName()), new MessageHandlers());
+		this(new DefaultChannelGroup(RpcServer.class.getName()));
 	}
 	
-	private RpcServer(ChannelGroup channelGroup, MessageHandlers messageHandlers) {
-		super(channelGroup, new RpcServerChannelPipelineFactory(channelGroup, messageHandlers));
-		this.messageHandlers = messageHandlers;
+	private RpcServer(ChannelGroup channelGroup) {
+		super(channelGroup, new RpcServerChannelPipelineFactory(channelGroup));
 	}
 	
-	public void addMessageHandler(Class<?> messageType, MessageHandler<?, ?> handler) {
-		this.messageHandlers.add(messageType, handler);
+	public void registerASynchronousMessageHandler(Class<? extends Serializable> messageType, AsynchronousMessageHandler<? extends Serializable> handler) {
+		pipelineFactory().registerASynchronousMessageHandler(messageType, handler);
+	}
+	
+	public void registerSynchronousMessageHandler(Class<? extends Serializable> messageType, SynchronousMessageHandler<? extends Serializable, ? extends Serializable> handler) {
+		pipelineFactory().registerSynchronousMessageHandler(messageType, handler);
+	}
+	
+	@Override
+	public RpcServerChannelPipelineFactory pipelineFactory() {
+		return (RpcServerChannelPipelineFactory)super.pipelineFactory();
 	}
 }

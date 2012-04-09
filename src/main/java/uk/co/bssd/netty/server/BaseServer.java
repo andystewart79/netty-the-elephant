@@ -1,5 +1,6 @@
 package uk.co.bssd.netty.server;
 
+import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -36,6 +37,10 @@ public class BaseServer {
 		this.bootstrap = new ServerBootstrap(channelFactory);
 		this.bootstrap.setPipelineFactory(pipelineFactory);
 	}
+	
+	public ChannelPipelineFactory pipelineFactory() {
+		return this.bootstrap.getPipelineFactory();
+	}
 
 	public void start(String host, int port) {
 		SocketAddress localAddress = new InetSocketAddress(host, port);
@@ -46,6 +51,10 @@ public class BaseServer {
 		this.serverChannel.close().awaitUninterruptibly();
 		closeAllChannels();
 		this.bootstrap.releaseExternalResources();
+	}
+	
+	public void broadcast(Serializable message) {
+		this.channelGroup.write(message);
 	}
 
 	private void closeAllChannels() {
