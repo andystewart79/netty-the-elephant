@@ -36,6 +36,7 @@ public class RpcServerIntegrationTest {
 	private RpcClient client;
 
 	private SubscribeLatch subscribeLatch;
+	private UnsubscribeLatch unsubscribeLatch;
 	private RpcServer server;
 
 	@Before
@@ -43,8 +44,11 @@ public class RpcServerIntegrationTest {
 		this.request = new SimpleRequest(HELLO);
 
 		this.subscribeLatch = new SubscribeLatch();
+		this.unsubscribeLatch = new UnsubscribeLatch();
+		
 		this.server = new RpcServer();
 		this.server.registerSubscribeListener(this.subscribeLatch);
+		this.server.registerUnsubscribeListener(this.unsubscribeLatch);
 		this.server.start(HOST, PORT);
 
 		this.clientDisconnectLatch = new DisconnectLatch();
@@ -80,6 +84,16 @@ public class RpcServerIntegrationTest {
 		Serializable message = HELLO;
 		this.server.broadcast(message, MESSAGE_CHANNEL);
 		assertThat(clientAwaitMessage(), is(message));
+	}
+	
+	@Test 
+	public void testUnsubscribingEnsuresClientNoLongerReceivesUpdatesOnPreviouslySubscribedChannel() {
+		this.client.subscribe(MESSAGE_CHANNEL);
+		this.client.unsubscribe(MESSAGE_CHANNEL);
+		this.unsubscribeLatch.awaitUnsubscriptionComplete();
+		
+		this.server.broadcast(HELLO, MESSAGE_CHANNEL);
+		assertThat(this.client.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS), is(nullValue()));
 	}
 
 	@Test

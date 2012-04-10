@@ -9,11 +9,13 @@ public class RpcServerChannelPipelineFactory extends DefaultServerChannelPipelin
 
 	private final RpcChannelHandler rpcChannelHandler;
 	private final SubscribeChannelRequestHandler subscribeChannelHandler;
+	private final UnsubscribeChannelRequestHandler unsubscribeChannelHandler;
 	
 	public RpcServerChannelPipelineFactory(ChannelGroup channelGroup, ChannelSubscriptions channelSubscriptions) {
 		super(channelGroup);
 		this.rpcChannelHandler = new RpcChannelHandler();
 		this.subscribeChannelHandler = new SubscribeChannelRequestHandler(channelSubscriptions);
+		this.unsubscribeChannelHandler = new UnsubscribeChannelRequestHandler(channelSubscriptions);
 	}
 
 	@Override
@@ -21,6 +23,7 @@ public class RpcServerChannelPipelineFactory extends DefaultServerChannelPipelin
 		ChannelPipeline pipeline = super.getPipeline();
 		pipeline.addLast("rpcHandler", this.rpcChannelHandler);
 		pipeline.addLast("subscribeHandler", this.subscribeChannelHandler);
+		pipeline.addLast("unsubscribeHandler", this.unsubscribeChannelHandler);
 		return pipeline;
 	}
 	

@@ -18,6 +18,7 @@ import uk.co.bssd.netty.dto.AsynchronousRequest;
 import uk.co.bssd.netty.dto.SubscribeChannelRequest;
 import uk.co.bssd.netty.dto.SynchronousRequest;
 import uk.co.bssd.netty.dto.SynchronousResponse;
+import uk.co.bssd.netty.dto.UnsubscribeChannelRequest;
 
 public class RpcClient {
 
@@ -76,6 +77,11 @@ public class RpcClient {
 	public void subscribe(String channelName) {
 		SubscribeChannelRequest subscribeRequest = new SubscribeChannelRequest(channelName);
 		send(subscribeRequest);
+	}
+	
+	public void unsubscribe(String channelName) {
+		UnsubscribeChannelRequest unsubscribeRequest = new UnsubscribeChannelRequest(channelName);
+		send(unsubscribeRequest);
 	}
 	
 	private void send(Serializable request) {

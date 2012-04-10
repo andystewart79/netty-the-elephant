@@ -30,6 +30,7 @@ public class RpcServer {
 		
 		this.channelSubscriptions = new ChannelSubscriptions();
 		registerSubscribeListener(new LoggingSubscribeListener());
+		registerUnsubscribeListener(new LoggingUnsubscribeListener());
 		
 		this.pipelineFactory = new RpcServerChannelPipelineFactory(
 				this.channelGroup, this.channelSubscriptions);
@@ -51,6 +52,10 @@ public class RpcServer {
 	
 	public void registerSubscribeListener(SubscribeListener listener) {
 		this.channelSubscriptions.addSubscribeListener(listener);
+	}
+	
+	public void registerUnsubscribeListener(UnsubscribeListener listener) {
+		this.channelSubscriptions.addUnsubscribeListener(listener);
 	}
 
 	public void registerAsynchronousMessageHandler(
