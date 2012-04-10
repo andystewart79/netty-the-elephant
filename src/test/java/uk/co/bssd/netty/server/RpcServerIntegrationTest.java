@@ -34,13 +34,17 @@ public class RpcServerIntegrationTest {
 
 	private DisconnectLatch clientDisconnectLatch;
 	private RpcClient client;
+
+	private SubscribeLatch subscribeLatch;
 	private RpcServer server;
 
 	@Before
 	public void before() throws Exception {
 		this.request = new SimpleRequest(HELLO);
 
+		this.subscribeLatch = new SubscribeLatch();
 		this.server = new RpcServer();
+		this.server.registerSubscribeListener(this.subscribeLatch);
 		this.server.start(HOST, PORT);
 
 		this.clientDisconnectLatch = new DisconnectLatch();
@@ -71,11 +75,8 @@ public class RpcServerIntegrationTest {
 	@Test
 	public void testBroadcastingMessageOnChannelSubscribedToByClientIsReceivedByClient() {
 		this.client.subscribe(MESSAGE_CHANNEL);
-		// TODO : this sleep must die, need to have a listener on the server that we can use to wait for subscriptions to happen
-		try {
-			Thread.sleep(10);
-		} catch (InterruptedException e) {
-		}
+		this.subscribeLatch.awaitSubscriptionComplete();
+		
 		Serializable message = HELLO;
 		this.server.broadcast(message, MESSAGE_CHANNEL);
 		assertThat(clientAwaitMessage(), is(message));
