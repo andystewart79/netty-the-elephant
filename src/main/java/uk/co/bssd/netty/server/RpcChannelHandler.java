@@ -33,6 +33,8 @@ public class RpcChannelHandler extends SimpleChannelUpstreamHandler {
 		} else if (message instanceof SynchronousRequest) {
 			this.synchronousMessageDispatcher.dispatch(
 					(SynchronousRequest) message, e.getChannel());
+		} else {
+			ctx.sendUpstream(e);
 		}
 	}
 

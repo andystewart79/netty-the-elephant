@@ -15,6 +15,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import uk.co.bssd.netty.DisconnectListener;
 import uk.co.bssd.netty.DisconnectListeners;
 import uk.co.bssd.netty.dto.AsynchronousRequest;
+import uk.co.bssd.netty.dto.SubscribeChannelRequest;
 import uk.co.bssd.netty.dto.SynchronousRequest;
 import uk.co.bssd.netty.dto.SynchronousResponse;
 
@@ -72,6 +73,11 @@ public class RpcClient {
 		return this.asynchronousMessageCollector.take(timeoutMillis);
 	}
 
+	public void subscribe(String channelName) {
+		SubscribeChannelRequest subscribeRequest = new SubscribeChannelRequest(channelName);
+		send(subscribeRequest);
+	}
+	
 	private void send(Serializable request) {
 		this.channel.write(request);
 	}
@@ -137,5 +143,4 @@ public class RpcClient {
 			this.clientBootstrap = null;
 		}
 	}
-
 }

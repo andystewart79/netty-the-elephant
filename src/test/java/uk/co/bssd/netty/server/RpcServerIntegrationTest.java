@@ -27,6 +27,8 @@ public class RpcServerIntegrationTest {
 	private static final long CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS = 2;
 
 	private static final String HELLO = "hello";
+	
+	private static final String MESSAGE_CHANNEL = "channel";
 
 	private SimpleRequest request;
 
@@ -54,12 +56,29 @@ public class RpcServerIntegrationTest {
 	}
 
 	@Test
-	public void testBroadcastingMessageFromServerIsReceivedByClient() {
-		String hello = HELLO;
-		this.server.broadcast(hello);
-
-		Serializable received = clientAwaitMessage();
-		assertThat(received, is((Serializable) hello));
+	public void testBroadcastingMessageToAllClientsFromServerIsReceivedByClient() {
+		Serializable message = HELLO;
+		this.server.broadcast(message);
+		assertThat(clientAwaitMessage(), is(message));
+	}
+	
+	@Test
+	public void testBroadcastingMessageOnChannelNotSubscribedToByClientIsNotReceivedByClient() {
+		this.server.broadcast(HELLO, MESSAGE_CHANNEL);
+		assertThat(this.client.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS), is(nullValue()));
+	}
+	
+	@Test
+	public void testBroadcastingMessageOnChannelSubscribedToByClientIsReceivedByClient() {
+		this.client.subscribe(MESSAGE_CHANNEL);
+		// TODO : this sleep must die, need to have a listener on the server that we can use to wait for subscriptions to happen
+		try {
+			Thread.sleep(10);
+		} catch (InterruptedException e) {
+		}
+		Serializable message = HELLO;
+		this.server.broadcast(message, MESSAGE_CHANNEL);
+		assertThat(clientAwaitMessage(), is(message));
 	}
 
 	@Test
