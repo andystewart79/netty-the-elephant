@@ -17,9 +17,9 @@ public class RpcChannelHandler extends SimpleChannelUpstreamHandler {
 
 	public RpcChannelHandler() {
 		this.asynchronousMessageDispatcher = new AsynchronousMessageDispatcher(
-				Executors.newFixedThreadPool(10));
+				Executors.newFixedThreadPool(1));
 		this.synchronousMessageDispatcher = new SynchronousMessageDispatcher(
-				Executors.newFixedThreadPool(10));
+				Executors.newFixedThreadPool(1));
 	}
 
 	@Override

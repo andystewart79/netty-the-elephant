@@ -35,7 +35,8 @@ public class RpcClient {
 		this.disconnectListeners = new DisconnectListeners();
 	}
 
-	public synchronized void start(String host, int port, long connectionTimeoutMillis) {
+	public synchronized void start(String host, int port,
+			long connectionTimeoutMillis) {
 		exceptionIfClientRunning();
 		this.clientBootstrap = bootstrap();
 		connect(host, port, connectionTimeoutMillis);
@@ -45,11 +46,11 @@ public class RpcClient {
 		closeChannel();
 		shutdownBootstrap();
 	}
-	
+
 	public void addDisconnectListener(DisconnectListener listener) {
 		this.disconnectListeners.addDisconnectListener(listener);
 	}
-	
+
 	public void sendAsync(Serializable message) {
 		AsynchronousRequest request = new AsynchronousRequest(message);
 		send(request);
@@ -69,54 +70,58 @@ public class RpcClient {
 
 		throw (RuntimeException) response.payload();
 	}
-	
+
 	public Serializable awaitMessage(long timeoutMillis) {
 		return this.asynchronousMessageCollector.take(timeoutMillis);
 	}
 
 	public void subscribe(String channelName) {
-		SubscribeChannelRequest subscribeRequest = new SubscribeChannelRequest(channelName);
+		SubscribeChannelRequest subscribeRequest = new SubscribeChannelRequest(
+				channelName);
 		send(subscribeRequest);
 	}
-	
+
 	public void unsubscribe(String channelName) {
-		UnsubscribeChannelRequest unsubscribeRequest = new UnsubscribeChannelRequest(channelName);
+		UnsubscribeChannelRequest unsubscribeRequest = new UnsubscribeChannelRequest(
+				channelName);
 		send(unsubscribeRequest);
 	}
-	
-	private void send(Serializable request) {
+
+	private void send(final Serializable request) {
 		this.channel.write(request);
 	}
 
 	private ClientBootstrap bootstrap() {
 		ChannelFactory channelFactory = channelFactory();
-		ChannelPipelineFactory clientChannelPipelineFactory = new ClientChannelPipelineFactory(this.synchronousMessageCollector, this.asynchronousMessageCollector, this.disconnectListeners);
-		
+		ChannelPipelineFactory clientChannelPipelineFactory = new ClientChannelPipelineFactory(
+				this.synchronousMessageCollector,
+				this.asynchronousMessageCollector, this.disconnectListeners);
+
 		ClientBootstrap bootstrap = new ClientBootstrap(channelFactory);
 		bootstrap.setPipelineFactory(clientChannelPipelineFactory);
-		
+
 		return bootstrap;
 	}
-	
+
 	private ChannelFactory channelFactory() {
 		return new NioClientSocketChannelFactory(
 				Executors.newCachedThreadPool(),
 				Executors.newCachedThreadPool());
 	}
-	
+
 	private void exceptionIfClientRunning() {
 		if (this.clientBootstrap != null) {
 			throw new IllegalStateException("Client is already running");
 		}
 	}
-	
+
 	private void connect(String host, int port, long connectionTimeoutMillis) {
 		SocketAddress address = new InetSocketAddress(host, port);
 		ChannelFuture future = this.clientBootstrap.connect(address);
 		awaitConnection(future, connectionTimeoutMillis);
 		this.channel = future.getChannel();
 	}
-	
+
 	private void awaitConnection(ChannelFuture future,
 			long connectionTimeoutMillis) {
 		boolean connected;
@@ -142,7 +147,7 @@ public class RpcClient {
 			this.channel = null;
 		}
 	}
-	
+
 	private void shutdownBootstrap() {
 		if (this.clientBootstrap != null) {
 			this.clientBootstrap.releaseExternalResources();
