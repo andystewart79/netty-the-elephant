@@ -2,6 +2,7 @@ package uk.co.bssd.netty;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelStateEvent;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
 public class DisconnectEventHandler extends SimpleChannelUpstreamHandler {
@@ -22,5 +23,11 @@ public class DisconnectEventHandler extends SimpleChannelUpstreamHandler {
 				// TODO log
 			}
 		}
+	}
+	
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e)
+			throws Exception {
+		// TODO log
 	}
 }

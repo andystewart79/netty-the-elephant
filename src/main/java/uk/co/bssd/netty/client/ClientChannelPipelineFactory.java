@@ -39,8 +39,7 @@ public class ClientChannelPipelineFactory implements ChannelPipelineFactory {
 				this.synchronousResponseHandler);
 		pipeline.addLast("asynchronousMessageCollector",
 				this.asynchronousResponseHandler);
-		pipeline.addLast("disconnectEventHandler",
-				this.disconnectEventHandler);
+		pipeline.addLast("disconnectEventHandler", this.disconnectEventHandler);
 
 		return pipeline;
 	}

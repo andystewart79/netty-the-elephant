@@ -1,16 +1,18 @@
 package uk.co.bssd.netty.server;
 
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertThat;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import org.hamcrest.CoreMatchers;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.co.bssd.netty.client.MessageSendFailedException;
 import uk.co.bssd.netty.client.RpcClient;
 
 public class NonFunctionalIntegrationTest {
@@ -39,7 +41,7 @@ public class NonFunctionalIntegrationTest {
 				new AsynchronousMessageHandler<Integer>() {
 					@Override
 					public void onMessage(Integer message) {
-						message(message);
+						messageReceived(message);
 					}
 				});
 
@@ -48,12 +50,7 @@ public class NonFunctionalIntegrationTest {
 		this.client = new RpcClient();
 		this.client.start(HOST, PORT, CLIENT_CONNECTION_TIMEOUT_MS);
 	}
-
-	private void message(Integer message) {
-		this.receivedMessages.add(message);
-		this.messagesLatch.countDown();
-	}
-
+	
 	@After
 	public void after() {
 		this.client.stop();
@@ -71,6 +68,17 @@ public class NonFunctionalIntegrationTest {
 		}
 		this.messagesLatch.await(10, TimeUnit.SECONDS);
 		
-		Assert.assertThat(sent, CoreMatchers.equalTo(this.receivedMessages));
+		assertThat(sent, equalTo(this.receivedMessages));
+	}
+	
+	@Test(expected=MessageSendFailedException.class)
+	public void testExceptionIsThrownWhenMessageIsSentFollowingDisconnection() {
+		this.server.stop();
+		this.client.sendAsync(Integer.valueOf(1));
+	}
+	
+	private void messageReceived(Integer message) {
+		this.receivedMessages.add(message);
+		this.messagesLatch.countDown();
 	}
 }

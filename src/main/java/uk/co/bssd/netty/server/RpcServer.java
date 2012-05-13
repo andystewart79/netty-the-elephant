@@ -3,17 +3,23 @@ package uk.co.bssd.netty.server;
 import java.io.Serializable;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFactory;
+import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+
+import uk.co.bssd.netty.ChannelFutureAdapter;
+import uk.co.bssd.netty.MessageFuture;
 
 public class RpcServer {
 
@@ -76,13 +82,18 @@ public class RpcServer {
 		this.channelGroup.write(message);
 	}
 
-	public void broadcast(Serializable message, String channelName) {
+	public MessageFuture broadcast(Serializable message, String channelName) {
 		Collection<Channel> subscribedClients = this.channelSubscriptions
 				.subscribedClients(channelName);
 
+		List<ChannelFuture> channelFutures = new ArrayList<ChannelFuture>();
+		
 		for (Channel client : subscribedClients) {
-			client.write(message);
+			ChannelFuture channelFuture = client.write( message);
+			channelFutures.add(channelFuture);
 		}
+		
+		return new ChannelFutureAdapter(channelFutures);
 	}
 
 	private ChannelFactory channelFactory() {

@@ -11,6 +11,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.co.bssd.netty.MessageFuture;
 import uk.co.bssd.netty.UnknownSynchronousRequestException;
 import uk.co.bssd.netty.client.MessageTimeoutException;
 import uk.co.bssd.netty.client.RpcClient;
@@ -86,6 +87,15 @@ public class RpcServerIntegrationTest {
 		assertThat(clientAwaitMessage(), is(message));
 	}
 	
+	@Test
+	public void testBroadcastingMessageReturnsFutureWhichCanBeUsedToDetermineIfMessageIsSentOk() {
+		this.client.subscribe(MESSAGE_CHANNEL);
+		this.subscribeLatch.awaitSubscriptionComplete();
+		MessageFuture messageFuture = this.server.broadcast(HELLO, MESSAGE_CHANNEL);
+		messageFuture.awaitUninterruptibly();
+		assertThat(messageFuture.isSuccessful(), is(true));
+	}
+	
 	@Test 
 	public void testUnsubscribingEnsuresClientNoLongerReceivesUpdatesOnPreviouslySubscribedChannel() {
 		this.client.subscribe(MESSAGE_CHANNEL);
@@ -94,6 +104,14 @@ public class RpcServerIntegrationTest {
 		
 		this.server.broadcast(HELLO, MESSAGE_CHANNEL);
 		assertThat(this.client.awaitMessage(CLIENT_MESSAGE_RECEIVE_SHORT_TIMEOUT_MS), is(nullValue()));
+	}
+	
+	@Test
+	public void testThatWhenAClientStopsWithoutCleaningUpItsSubscriptionsTheServerSideTidiesUpForIt() {
+		this.client.subscribe(MESSAGE_CHANNEL);
+		this.subscribeLatch.awaitSubscriptionComplete();
+		this.client.stop();
+		assertThat(this.unsubscribeLatch.awaitUnsubscriptionComplete(), is(true));
 	}
 
 	@Test

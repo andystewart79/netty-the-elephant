@@ -3,24 +3,34 @@ package uk.co.bssd.netty.server;
 import java.io.Serializable;
 
 import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.channel.ChannelPipelineFactory;
+import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
+import org.jboss.netty.handler.codec.serialization.ClassResolvers;
+import org.jboss.netty.handler.codec.serialization.ObjectDecoder;
+import org.jboss.netty.handler.codec.serialization.ObjectEncoder;
 
-public class RpcServerChannelPipelineFactory extends DefaultServerChannelPipelineFactory {
+public class RpcServerChannelPipelineFactory implements ChannelPipelineFactory {
 
 	private final RpcChannelHandler rpcChannelHandler;
+	private final ServerChannelEventHandler channelEventHandler;
 	private final SubscribeChannelRequestHandler subscribeChannelHandler;
 	private final UnsubscribeChannelRequestHandler unsubscribeChannelHandler;
 	
 	public RpcServerChannelPipelineFactory(ChannelGroup channelGroup, ChannelSubscriptions channelSubscriptions) {
-		super(channelGroup);
 		this.rpcChannelHandler = new RpcChannelHandler();
+		this.channelEventHandler = new ServerChannelEventHandler(channelGroup, channelSubscriptions);
 		this.subscribeChannelHandler = new SubscribeChannelRequestHandler(channelSubscriptions);
 		this.unsubscribeChannelHandler = new UnsubscribeChannelRequestHandler(channelSubscriptions);
 	}
 
 	@Override
 	public ChannelPipeline getPipeline() throws Exception {
-		ChannelPipeline pipeline = super.getPipeline();
+		ChannelPipeline pipeline = Channels.pipeline();
+		pipeline.addLast("objectDecoder",
+				new ObjectDecoder(ClassResolvers.cacheDisabled(null)));
+		pipeline.addLast("objectEncoder", new ObjectEncoder());
+		pipeline.addLast("channelEventHandler", this.channelEventHandler);
 		pipeline.addLast("rpcHandler", this.rpcChannelHandler);
 		pipeline.addLast("subscribeHandler", this.subscribeChannelHandler);
 		pipeline.addLast("unsubscribeHandler", this.unsubscribeChannelHandler);

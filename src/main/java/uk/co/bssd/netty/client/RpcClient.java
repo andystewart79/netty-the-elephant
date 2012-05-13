@@ -88,7 +88,14 @@ public class RpcClient {
 	}
 
 	private void send(final Serializable request) {
-		this.channel.write(request);
+		ChannelFuture future = this.channel.write(request);
+		try {
+			future.await();
+		} catch (InterruptedException e) {
+		}
+		if (!future.isSuccess()) {
+			throw new MessageSendFailedException();
+		}
 	}
 
 	private ClientBootstrap bootstrap() {
@@ -124,20 +131,13 @@ public class RpcClient {
 
 	private void awaitConnection(ChannelFuture future,
 			long connectionTimeoutMillis) {
-		boolean connected;
+		future.awaitUninterruptibly(connectionTimeoutMillis);
 
-		try {
-			connected = future.await(connectionTimeoutMillis);
-		} catch (InterruptedException e) {
-			throw new IllegalStateException(
-					"Interrupted whilst waiting to connect", e);
-		}
-
-		if (!connected) {
-			String message = String.format(
+		if (!future.isSuccess()) {
+			stop();
+			throw new IllegalStateException(String.format(
 					"Timed out after [%d] ms waiting for connection to server",
-					connectionTimeoutMillis);
-			throw new IllegalStateException(message);
+					connectionTimeoutMillis));
 		}
 	}
 

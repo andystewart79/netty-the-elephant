@@ -11,29 +11,40 @@ import com.google.common.collect.Multimap;
 
 public class ChannelSubscriptions {
 
-	private final Multimap<String, Channel> subscriptions;
+	private final Multimap<String, Channel> subscriptionsByChannelName;
+	private final Multimap<Channel, String> subscriptionsByChannel;
 
 	private final Set<SubscribeListener> subscribeListeners;
 	private final Set<UnsubscribeListener> unsubscribeListeners;
 	
 	public ChannelSubscriptions() {
-		this.subscriptions = HashMultimap.create();
+		this.subscriptionsByChannelName = HashMultimap.create();
+		this.subscriptionsByChannel = HashMultimap.create();
 		this.subscribeListeners = new HashSet<SubscribeListener>();
 		this.unsubscribeListeners = new HashSet<UnsubscribeListener>();
 	}
 
 	public void subscribe(Channel channel, String channelName) {
-		this.subscriptions.put(channelName, channel);
+		this.subscriptionsByChannelName.put(channelName, channel);
+		this.subscriptionsByChannel.put(channel, channelName);
 		notifySubscribeListeners(channel, channelName);
 	}
 	
 	public void unsubscribe(Channel channel, String channelName) {
-		this.subscriptions.remove(channelName, channel);
+		this.subscriptionsByChannelName.remove(channelName, channel);
+		this.subscriptionsByChannel.remove(channel, channelName);
 		notifyUnsubscribeListeners(channel, channelName);
 	}
 
+	public void unsubscribeAll(Channel channel) {
+		Collection<String> channelNames = new HashSet<String>(this.subscriptionsByChannel.get(channel));
+		for (String channelName : channelNames) {
+			unsubscribe(channel, channelName);
+		}
+	}
+	
 	public Collection<Channel> subscribedClients(String channelName) {
-		return this.subscriptions.get(channelName);
+		return this.subscriptionsByChannelName.get(channelName);
 	}
 	
 	public void addSubscribeListener(SubscribeListener listener) {
